@@ -12,9 +12,9 @@ from data_table import DataTable, DataRow
 import matplotlib.pyplot as plt
 
 
-#----------------------------------------------------------------------
+# ----------------------------------------------------------------------
 # HW5
-#----------------------------------------------------------------------
+# ----------------------------------------------------------------------
 
 def normalize(table, column):
     """Normalize the values in the given column of the table. This
@@ -30,9 +30,7 @@ def normalize(table, column):
     for row in table:
         list.append(row[column])
     for row in table:
-        row[column] = (row[column]-min(list)) / (max(list)-min(list))
-    
-
+        row[column] = (row[column] - min(list)) / (max(list) - min(list))
 
 
 def discretize(table, column, cut_points):
@@ -53,16 +51,12 @@ def discretize(table, column, cut_points):
                 row[column] = i + 1
                 test = True
                 break
-        if test == False:
+        if test is False:
             row[column] = len(cut_points) + 1
-        
-        
 
-
-#----------------------------------------------------------------------
+# ----------------------------------------------------------------------
 # HW4
-#----------------------------------------------------------------------
-
+# ----------------------------------------------------------------------
 
 
 def column_values(table, column):
@@ -71,14 +65,13 @@ def column_values(table, column):
     Args:
         table: The data table that values are drawn from
         column: The column whose values are returned
-    
+
     """
 
     list = []
     for row in table:
         list.append(row[column])
     return list
-
 
 
 def mean(table, column):
@@ -89,7 +82,7 @@ def mean(table, column):
         table: The data table that values are drawn from
         column: The column to compute the mean from
 
-    Notes: 
+    Notes:
         Assumes there are no missing values in the column.
 
     """
@@ -100,7 +93,6 @@ def mean(table, column):
         n = n + 1
         sum = sum + row[column]
     return sum / n
-
 
 
 def variance(table, column):
@@ -115,7 +107,7 @@ def variance(table, column):
 
     """
 
-    m = mean(table,column)
+    m = mean(table, column)
     sum = 0
     n = 0
     for row in table:
@@ -138,20 +130,19 @@ def std_dev(table, column):
 
     """
 
-    return sqrt(variance(table,column))
-
+    return sqrt(variance(table, column))
 
 
 def covariance(table, x_column, y_column):
     """Returns the covariance of the values in the given table columns.
-    
+
     Args:
         table: The data table that values are drawn from
         x_column: The column with the "x-values"
         y_column: The column with the "y-values"
 
     Notes:
-        Assumes there are no missing values in the columns.        
+        Assumes there are no missing values in the columns.
 
     """
 
@@ -161,9 +152,8 @@ def covariance(table, x_column, y_column):
     sum = 0
     for row in table:
         n = n + 1
-        sum = sum + (row[x_column]-xm)*(row[y_column]-ym)
+        sum = sum + (row[x_column] - xm) * (row[y_column] - ym)
     return sum / n
-
 
 
 def linear_regression(table, x_column, y_column):
@@ -183,13 +173,12 @@ def linear_regression(table, x_column, y_column):
     xm = mean(table, x_column)
     ym = mean(table, y_column)
 
-    slope = cc * (ystd/xstd)
+    slope = cc * (ystd / xstd)
     slope = round(slope)
     intercept = ym - (slope * xm)
     intercept = round(intercept)
-    
-    return slope, intercept
 
+    return slope, intercept
 
 
 def correlation_coefficient(table, x_column, y_column):
@@ -202,21 +191,21 @@ def correlation_coefficient(table, x_column, y_column):
         y_column: The column with the "y values"
 
     Notes:
-        Assumes there are no missing values in the columns.        
+        Assumes there are no missing values in the columns.
 
     """
 
     cov = covariance(table, x_column, y_column)
     xstd = std_dev(table, x_column)
     ystd = std_dev(table, y_column)
-    return cov/(xstd*ystd)
+    return cov / (xstd * ystd)
 
 
 def frequency_of_range(table, column, start, end):
     """Return the number of instances of column values such that each
     instance counted has a column value greater or equal to start and
-    less than end. 
-    
+    less than end.
+
     Args:
         table: The data table used to get column values from
         column: The column to bin
@@ -237,7 +226,7 @@ def frequency_of_range(table, column, start, end):
 
 def histogram(table, column, nbins, xlabel, ylabel, title, filename=None):
     """Create an equal-width histogram of the given table column and number of bins.
-    
+
     Args:
         table: The data table to use
         column: The column to obtain the value distribution
@@ -251,7 +240,7 @@ def histogram(table, column, nbins, xlabel, ylabel, title, filename=None):
         If filename is given, chart is saved and not displayed.
 
     """
-    
+
     list = []
     for row in table:
         list = list + [row[column]]
@@ -265,11 +254,11 @@ def histogram(table, column, nbins, xlabel, ylabel, title, filename=None):
     else:
         plt.show()
     plt.close()
-    
+
 
 def scatter_plot_with_best_fit(table, xcolumn, ycolumn, xlabel, ylabel, title, filename=None):
     """Create a scatter plot from given values that includes the "best fit" line.
-    
+
     Args:
         table: The data table to use
         xcolumn: The column for x-values
@@ -292,12 +281,12 @@ def scatter_plot_with_best_fit(table, xcolumn, ycolumn, xlabel, ylabel, title, f
     slope, intercept = linear_regression(table, xcolumn, ycolumn)
     max1 = max(xvalues)
     min1 = min(xvalues)
-    y1 = slope*max1 + intercept
-    y2 = slope*min1 + intercept
-        
+    y1 = slope * max1 + intercept
+    y2 = slope * min1 + intercept
+
     plt.figure()
     plt.scatter(xvalues, yvalues)
-    plt.plot([min1,max1], [y2,y1], linestyle = '-', color = 'r')
+    plt.plot([min1, max1], [y2, y1], linestyle='-', color='r')
     plt.title(title)
     plt.xlabel(xlabel)
     plt.ylabel(ylabel)
@@ -306,18 +295,16 @@ def scatter_plot_with_best_fit(table, xcolumn, ycolumn, xlabel, ylabel, title, f
     else:
         plt.show()
     plt.close()
-    
 
 
-#----------------------------------------------------------------------
+# ----------------------------------------------------------------------
 # HW3
-#----------------------------------------------------------------------
-
+# ----------------------------------------------------------------------
 
 
 def distinct_values(table, column):
     """Return the unique values in the given column of the table.
-    
+
     Args:
         table: The data table used to get column values from.
         column: The column of the table to get values from.
@@ -328,10 +315,9 @@ def distinct_values(table, column):
 
     list = []
     for r in table:
-        if r[column] != None and r[column] not in list:
+        if r[column] is None and r[column] not in list:
             list.append(r[column])
     return list
-
 
 
 def remove_missing(table, columns):
@@ -345,7 +331,7 @@ def remove_missing(table, columns):
     Returns:
         A new data table.
 
-    Notes: 
+    Notes:
         Columns must be valid.
 
     """
@@ -357,22 +343,21 @@ def remove_missing(table, columns):
             if r[col] == '':
                 has_missing_value = True
                 break
-        if has_missing_value == False:
+        if has_missing_value is False:
             newtable.append(r.values())
     return newtable
 
 
-
 def duplicate_instances(table):
     """Returns a table containing duplicate instances from original table.
-    
+
     Args:
         table: The original data table to check for duplicate instances.
 
     """
 
     newtable = DataTable(table.columns())
-    if table == None:
+    if table is None:
         return newtable
     test = []
     for row in table:
@@ -390,17 +375,16 @@ def duplicate_instances(table):
     return newtable
 
 
-
 def remove_duplicates(table):
     """Remove duplicate instances from the given table.
-    
+
     Args:
         table: The data table to remove duplicate rows from
 
     """
 
     newtable = DataTable(table.columns())
-    if table == None:
+    if table is None:
         return newtable
     test = []
     for row in table:
@@ -413,18 +397,17 @@ def remove_duplicates(table):
     return newtable
 
 
-
 def partition(table, columns):
     """Partition the given table into a list containing one table per
     corresponding values in the grouping columns.
-    
+
     Args:
         table: the table to partition
         columns: the columns to partition the table on
     """
 
     newlist = []
-    if columns == None:
+    if columns is None:
         return [table]
     else:
         if table.row_count() == 0:
@@ -448,8 +431,6 @@ def partition(table, columns):
         return newlist
 
 
-
-
 def summary_stat(table, column, function):
     """Return the result of applying the given function to a list of
     non-empty column values in the given table.
@@ -459,7 +440,7 @@ def summary_stat(table, column, function):
         column: the column in the table to compute the statistic
         function: the function to compute the summary statistic
 
-    Notes: 
+    Notes:
         The given function must take a list of values, return a single
         value, and ignore empty values (denoted by the empty string)
 
@@ -473,8 +454,7 @@ def summary_stat(table, column, function):
     return val
 
 
-
-def replace_missing(table, column, partition_columns, function): 
+def replace_missing(table, column, partition_columns, function):
     """Replace missing values in a given table's column using the provided
      function over similar instances, where similar instances are
      those with the same values for the given partition columns.
@@ -485,7 +465,7 @@ def replace_missing(table, column, partition_columns, function):
         partition_columns: for finding similar values
         function: function that selects value to use for missing value
 
-    Notes: 
+    Notes:
         Assumes there is at least one instance with a non-empty value
         in each partition
 
@@ -511,11 +491,11 @@ def replace_missing(table, column, partition_columns, function):
                 if test == key[x]:
                     values.append(row[column])
         stat = function(values)
-        if stat != None:
+        if stat is not None:
             stat = int(stat)
             stat.__trunc__
         statvals.append(stat)
-            
+
     newtable = DataTable(table.columns())
     for row in table:
         list = []
@@ -536,7 +516,6 @@ def replace_missing(table, column, partition_columns, function):
                             list.append(row[col])
             newtable.append(list)
     return newtable
-
 
 
 def summary_stat_by_column(table, partition_column, stat_column, function):
@@ -569,9 +548,6 @@ def summary_stat_by_column(table, partition_column, stat_column, function):
         scolumn.append(x)
         n = n + 1
     return pcolumn, scolumn
-        
-
-
 
 
 def frequencies(table, partition_column):
@@ -602,10 +578,9 @@ def frequencies(table, partition_column):
     return univals, freqvals
 
 
-
 def dot_chart(xvalues, xlabel, title, filename=None):
     """Create a dot chart from given values.
-    
+
     Args:
         xvalues: The values to display
         xlabel: The label of the x axis
@@ -639,10 +614,9 @@ def dot_chart(xvalues, xlabel, title, filename=None):
     plt.close()
 
 
-
 def pie_chart(values, labels, title, filename=None):
     """Create a pie chart from given values.
-    
+
     Args:
         values: The values to display
         labels: The label to use for each value
@@ -655,8 +629,8 @@ def pie_chart(values, labels, title, filename=None):
     """
 
     plt.figure()
-    plt.pie(values, labels = labels,)
-    plt.legend(title = title)
+    plt.pie(values, labels=labels,)
+    plt.legend(title=title)
     if filename:
         plt.savefig(filename, format='svg')
     else:
@@ -664,10 +638,9 @@ def pie_chart(values, labels, title, filename=None):
     plt.close()
 
 
-
 def bar_chart(bar_values, bar_names, xlabel, ylabel, title, filename=None):
     """Create a bar chart from given values.
-    
+
     Args:
         bar_values: The values used for each bar
         bar_labels: The label for each bar value
@@ -693,10 +666,9 @@ def bar_chart(bar_values, bar_names, xlabel, ylabel, title, filename=None):
     plt.close()
 
 
-
 def scatter_plot(xvalues, yvalues, xlabel, ylabel, title, filename=None):
     """Create a scatter plot from given values.
-    
+
     Args:
         xvalues: The x values to plot
         yvalues: The y values to plot
@@ -722,10 +694,9 @@ def scatter_plot(xvalues, yvalues, xlabel, ylabel, title, filename=None):
     plt.close()
 
 
-
 def box_plot(distributions, labels, xlabel, ylabel, title, filename=None):
     """Create a box and whisker plot from given values.
-    
+
     Args:
         distributions: The distribution for each box
         labels: The label of each corresponding box

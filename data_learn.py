@@ -6,24 +6,24 @@ CLASS: CPSC 322
 
 """
 
-from data_table import *
-from data_util import *
-from decision_tree import *
+from data_table import DataTable, DataRow
+from data_util import distinct_values, std_dev
+from decision_tree import LeafNode, AttributeNode
 
 from random import randint
 import math
 
 
-#----------------------------------------------------------------------
+# ----------------------------------------------------------------------
 # HW-8
-#----------------------------------------------------------------------
+# ----------------------------------------------------------------------
 
 
 def random_subset(F, columns):
     """Returns F unique column names from the given list of columns. The
     column names are selected randomly from the given names.
 
-    Args: 
+    Args:
         F: The number of columns to return.
         columns: The columns to select F column names from.
 
@@ -38,25 +38,24 @@ def random_subset(F, columns):
         count = 0
         temp = []
         while count < F:
-            num = randint(0,len(columns)-1)
+            num = randint(0, len(columns) - 1)
             if columns[num] not in temp:
                 count += 1
                 temp.append(columns[num])
         return temp
 
 
-
-def tdidt_F(table, label_col, F, columns): 
+def tdidt_F(table, label_col, F, columns):
     """Returns an initial decision tree for the table using information
     gain, selecting a random subset of size F of the columns for
     attribute selection. If fewer than F columns remain, all columns
     are used in attribute selection.
 
     Args:
-        table: The table to build the decision tree from. 
-        label_col: The column containing class labels. 
+        table: The table to build the decision tree from.
+        label_col: The column containing class labels.
         F: The number of columns to randomly subselect
-        columns: The categorical columns. 
+        columns: The categorical columns.
 
     Notes: The resulting tree can contain multiple leaf nodes for a
         particular attribute value, may have attributes without all
@@ -68,7 +67,6 @@ def tdidt_F(table, label_col, F, columns):
     return tdidt(table, label_col, newColumns)
 
 
-
 def closest_centroid(centroids, row, columns):
     """Given k centroids and a row, finds the centroid that the row is
     closest to.
@@ -76,9 +74,9 @@ def closest_centroid(centroids, row, columns):
     Args:
         centroids: The list of rows serving as cluster centroids.
         row: The row to find closest centroid to.
-        columns: The numerical columns to calculate distance from. 
-    
-    Returns: The index of the centroid the row is closest to. 
+        columns: The numerical columns to calculate distance from.
+
+    Returns: The index of the centroid the row is closest to.
 
     Notes: Uses Euclidean distance (without the sqrt) and assumes
         there is at least one centroid.
@@ -88,30 +86,29 @@ def closest_centroid(centroids, row, columns):
     dist = 0
     index = 0
     for col in columns:
-        dist += abs(centroids[0][col]-row[col])
+        dist += abs(centroids[0][col] - row[col])
     if len(centroids) > 1:
         for i in range(len(centroids)):
             newdist = 0
             for col in columns:
-                newdist += abs(centroids[i][col]-row[col])
+                newdist += abs(centroids[i][col] - row[col])
             if newdist < dist:
                 dist = newdist
                 index = i
     return index
 
 
-
 def select_k_random_centroids(table, k):
     """Returns a list of k random rows from the table to serve as initial
     centroids.
 
-    Args: 
+    Args:
         table: The table to select rows from.
         k: The number of rows to select values from.
-    
-    Returns: k unique rows. 
 
-    Notes: k must be less than or equal to the number of rows in the table. 
+    Returns: k unique rows.
+
+    Notes: k must be less than or equal to the number of rows in the table.
 
     """
 
@@ -120,7 +117,7 @@ def select_k_random_centroids(table, k):
     if k <= table.row_count():
         count = 0
         while count < k:
-            num = randint(0,table.row_count()-1)
+            num = randint(0, table.row_count() - 1)
             if num not in centroids_check:
                 count += 1
                 centroids.append(table[num])
@@ -128,8 +125,7 @@ def select_k_random_centroids(table, k):
     return centroids
 
 
-
-def k_means(table, centroids, columns): 
+def k_means(table, centroids, columns):
     """Returns k clusters from the table using the initial centroids for
     the given numerical columns.
 
@@ -150,7 +146,7 @@ def k_means(table, centroids, columns):
         clusters.append(DataTable(table.columns()))
     for row in table:
         clusters[closest_centroid(centroids, row, columns)].append(row.values())
-    
+
     newcentroids = []
     for c in clusters:
         row1 = []
@@ -169,7 +165,6 @@ def k_means(table, centroids, columns):
     for row in table:
         newclusters[closest_centroid(newcentroids, row, columns)].append(row.values())
     return newclusters
-            
 
 
 def tss(clusters, columns):
@@ -179,8 +174,8 @@ def tss(clusters, columns):
     Args:
         clusters: A list of data tables serving as the clusters
         columns: The list of numerical columns for determining distances.
-    
-    Returns: A list of tss scores for each cluster. 
+
+    Returns: A list of tss scores for each cluster.
 
     """
 
@@ -200,19 +195,17 @@ def tss(clusters, columns):
     return tss_vals
 
 
-
-#----------------------------------------------------------------------
+# ----------------------------------------------------------------------
 # HW-7
-#----------------------------------------------------------------------
-
+# ----------------------------------------------------------------------
 
 
 def same_class(table, label_col):
     """Returns true if all of the instances in the table have the same
     labels and false otherwise.
 
-    Args: 
-        table: The table with instances to check. 
+    Args:
+        table: The table with instances to check.
         label_col: The column with class labels.
 
     """
@@ -226,11 +219,10 @@ def same_class(table, label_col):
     return True
 
 
-
 def build_leaves(table, label_col):
     """Builds a list of leaves out of the current table instances.
-    
-    Args: 
+
+    Args:
         table: The table to build the leaves out of.
         label_col: The column to use as class labels
 
@@ -251,10 +243,10 @@ def build_leaves(table, label_col):
                         count += 1
                         test = True
                 if not test:
-                    nodes.append(LeafNode(r[label_col],1,1))
+                    nodes.append(LeafNode(r[label_col], 1, 1))
                     count += 1
             else:
-                nodes.append(LeafNode(r[label_col],1,1))
+                nodes.append(LeafNode(r[label_col], 1, 1))
                 count += 1
     else:
         return []
@@ -263,10 +255,9 @@ def build_leaves(table, label_col):
     return nodes
 
 
-
 def calc_e_new(table, label_col, columns):
     """Returns entropy values for the given table, label column, and
-    feature columns (assumed to be categorical). 
+    feature columns (assumed to be categorical).
 
     Args:
         table: The table to compute entropy from
@@ -275,7 +266,7 @@ def calc_e_new(table, label_col, columns):
 
     Returns: A dictionary, e.g., {e1:['a1', 'a2', ...], ...}, where
         each key is an entropy value and each corresponding key-value
-        is a list of attributes having the corresponding entropy value. 
+        is a list of attributes having the corresponding entropy value.
 
     Notes: This function assumes all columns are categorical.
 
@@ -301,10 +292,10 @@ def calc_e_new(table, label_col, columns):
                         count += 1
             endval = []
             for keys, vals, in list1.items():
-                temp = vals/count
+                temp = vals / count
                 log = math.log2(temp)
-                endval.append(temp*log)
-            temp1.append(((-1)*sum(endval))*(count/table.row_count()))
+                endval.append(temp * log)
+            temp1.append(((-1) * sum(endval)) * (count / table.row_count()))
         temp2 = sum(temp1)
         if temp2 in list(ents.keys()):
             ents[temp2] = ents[temp2] + [col]
@@ -313,15 +304,14 @@ def calc_e_new(table, label_col, columns):
     return ents
 
 
-
-def tdidt(table, label_col, columns): 
+def tdidt(table, label_col, columns):
     """Returns an initial decision tree for the table using information
     gain.
 
     Args:
-        table: The table to build the decision tree from. 
-        label_col: The column containing class labels. 
-        columns: The categorical columns. 
+        table: The table to build the decision tree from.
+        label_col: The column containing class labels.
+        columns: The categorical columns.
 
     Notes: The resulting tree can contain multiple leaf nodes for a
         particular attribute value, may have attributes without all
@@ -346,7 +336,7 @@ def tdidt(table, label_col, columns):
                 if len(dist) == 1:
                     leaves = build_leaves(table, label_col)
                     return leaves
-                else:                
+                else:
                     for d in dist:
                         newtable = DataTable(table.columns())
                         newtable1 = DataTable(table.columns())
@@ -360,13 +350,12 @@ def tdidt(table, label_col, columns):
         return tree
 
 
-
 def summarize_instances(dt_root):
     """Return a summary by class label of the leaf nodes within the given
     decision tree.
 
-    Args: 
-        dt_root: The subtree root whose (descendant) leaf nodes are summarized. 
+    Args:
+        dt_root: The subtree root whose (descendant) leaf nodes are summarized.
 
     Returns: A dictionary {label1: count, label2: count, ...} of class
         labels and their corresponding number of instances under the
@@ -375,9 +364,9 @@ def summarize_instances(dt_root):
     """
 
     final = {}
-    if type(dt_root) == AttributeNode:
+    if type(dt_root) is AttributeNode:
         for key in dt_root.values.keys():
-            vals = summarize_instances(dt_root.values[key]) # dictionary
+            vals = summarize_instances(dt_root.values[key])  # dictionary
             for key, val in vals.items():
                 if key not in final.keys():
                     final[key] = val
@@ -385,10 +374,10 @@ def summarize_instances(dt_root):
                     final[key] += val
         return final
     else:
-        if type(dt_root) == list:
+        if type(dt_root) is list:
             temp = {}
             for leaf in dt_root:
-                vals = summarize_instances(leaf) # dictionary
+                vals = summarize_instances(leaf)  # dictionary
                 for key, val in vals.items():
                     if key not in temp.keys():
                         temp[key] = val
@@ -397,7 +386,6 @@ def summarize_instances(dt_root):
             return temp
         else:
             return {dt_root.label: dt_root.count}
-
 
 
 def resolve_leaf_nodes(dt_root):
@@ -413,18 +401,18 @@ def resolve_leaf_nodes(dt_root):
 
     """
 
-    if type(dt_root) == AttributeNode:
+    if type(dt_root) is AttributeNode:
         final = AttributeNode(dt_root.name, values={})
         for key in dt_root.values.keys():
             vals = resolve_leaf_nodes(dt_root.values[key])
-            if type(vals) == LeafNode:
+            if type(vals) is LeafNode:
                 final.values[key] = [vals]
             else:
                 final.values[key] = vals
         return final
     else:
-        if type(dt_root) == list:
-            list1 = LeafNode('a',0,0)
+        if type(dt_root) is list:
+            list1 = LeafNode('a', 0, 0)
             for leaf in dt_root:
                 if leaf.count > list1.count:
                     list1 = leaf
@@ -433,15 +421,14 @@ def resolve_leaf_nodes(dt_root):
             return dt_root
 
 
-
 def resolve_attribute_values(dt_root, table):
     """Return a modified decision tree by replacing attribute nodes
     having missing attribute values with the corresponding summarized
     descendent leaf nodes.
-    
+
     Args:
         dt_root: The root of the decision tree to modify.
-        table: The data table the tree was built from. 
+        table: The data table the tree was built from.
 
     Notes: The table is only used to obtain the set of unique values
         for attributes represented in the decision tree.
@@ -452,10 +439,10 @@ def resolve_attribute_values(dt_root, table):
         return dt_root
     temp = AttributeNode(dt_root.name, {})
     for key in dt_root.values.keys():
-        if type(dt_root.values[key]) == AttributeNode:
+        if type(dt_root.values[key]) is AttributeNode:
             vals = resolve_attribute_values(dt_root.values[key], table)
             temp.values[key] = vals
-        elif type(dt_root.values[key]) == list:
+        elif type(dt_root.values[key]) is list:
             temp.values[key] = dt_root.values[key]
     if len(distinct_values(table, dt_root.name)) != len(list(temp.values.keys())):
         if len(list(temp.values.keys())) == 1:
@@ -464,7 +451,7 @@ def resolve_attribute_values(dt_root, table):
             list1 = []
             total = 0
             for key in temp.values.keys():
-                if type(temp.values[key]) == list: 
+                if type(temp.values[key]) is list:
                     list1.append(temp.values[key][0])
                     total += temp.values[key][0].total
             for t in list1:
@@ -476,33 +463,32 @@ def resolve_attribute_values(dt_root, table):
         return temp.values
 
 
-
-def tdidt_predict(dt_root, instance): 
-    """Returns the class for the given instance given the decision tree. 
+def tdidt_predict(dt_root, instance):
+    """Returns the class for the given instance given the decision tree.
 
     Args:
-        dt_root: The root node of the decision tree. 
-        instance: The instance to classify. 
+        dt_root: The root node of the decision tree.
+        instance: The instance to classify.
 
     Returns: A pair consisting of the predicted label and the
        corresponding percent value of the leaf node.
 
     """
 
-    if type(dt_root) == LeafNode:
+    if type(dt_root) is LeafNode:
         return dt_root.label, dt_root.percent()
-    if type(dt_root) == AttributeNode:
+    if type(dt_root) is AttributeNode:
         for key in dt_root.values.keys():
             if instance[dt_root.name] == key:
                 return tdidt_predict(dt_root.values[key], instance)
-    if type(dt_root) == list:
+    if type(dt_root) is list:
         return dt_root[0].label, dt_root[0].percent()
 
 
-
-#----------------------------------------------------------------------
+# ----------------------------------------------------------------------
 # HW-6
-#----------------------------------------------------------------------
+# ----------------------------------------------------------------------
+
 
 def naive_bayes(table, instance, label_col, continuous_cols, categorical_cols=[]):
     """Returns the labels with the highest probabibility for the instance
@@ -512,7 +498,7 @@ def naive_bayes(table, instance, label_col, continuous_cols, categorical_cols=[]
        table: A data table of instances to use for estimating most probably labels.
        instance: The instance to classify.
        continuous_cols: The continuous columns to use in the estimation.
-       categorical_cols: The categorical columns to use in the estimation. 
+       categorical_cols: The categorical columns to use in the estimation.
 
     Returns: A pair (labels, prob) consisting of a list of the labels
         with the highest probability and the corresponding highest
@@ -546,7 +532,7 @@ def naive_bayes(table, instance, label_col, continuous_cols, categorical_cols=[]
                             pos_cat_col[x][0] += 1
                             pos_cat_col[x][1] += 1
                         else:
-                            pos_cat_col[x][1] += 1 
+                            pos_cat_col[x][1] += 1
                 if continuous_cols != []:
                     for x in range(len(continuous_cols)):
                         pos_cont_col[x][0] += row[continuous_cols[x]]
@@ -557,20 +543,20 @@ def naive_bayes(table, instance, label_col, continuous_cols, categorical_cols=[]
             for x in range(len(pos_cat_col)):
                 newlist.append(pos_cat_col[x][0] / pos_cat_col[x][1])
             res_cat = newlist[0]
-            for x in range(len(newlist)-1):
-                res_cat = res_cat * newlist[x+1]
+            for x in range(len(newlist) - 1):
+                res_cat = res_cat * newlist[x + 1]
             cond_prob_cat.append(res_cat)
-            
+
         if continuous_cols != []:
             newlist = []
             for x in range(len(pos_cont_col)):
                 mean = pos_cont_col[x][0] / pos_cont_col[x][1]
                 newlist.append(gaussian_density(instance[continuous_cols[x]], mean, std_dev(newtable, continuous_cols[x])))
             res_cont = newlist[0]
-            for x in range(len(newlist)-1):
-                res_cont = res_cont * newlist[x+1]
+            for x in range(len(newlist) - 1):
+                res_cont = res_cont * newlist[x + 1]
             cond_prob_cont.append(res_cont)
-            
+
     prob_labels = [count / table.row_count() for count in lab_counts]
 
     final_prob = 0
@@ -590,9 +576,6 @@ def naive_bayes(table, instance, label_col, continuous_cols, categorical_cols=[]
                 final_labels.append(labels[x])
 
     return final_labels, final_prob
-    
-    
-
 
 
 def gaussian_density(x, mean, sdev):
@@ -605,20 +588,21 @@ def gaussian_density(x, mean, sdev):
         sdev: The standard deviation of the distribution.
 
     """
-    
+
     var = sdev**2
-    deno = (2*math.pi*var)**(1/2)
-    num = math.exp(-(x-mean)**2 / (2*var))
-    return num/deno
+    deno = (2 * math.pi * var)**(1 / 2)
+    num = math.exp(-(x - mean)**2 / (2 * var))
+    return num / deno
 
 
-#----------------------------------------------------------------------
+# ----------------------------------------------------------------------
 # HW-5
-#----------------------------------------------------------------------
+# ----------------------------------------------------------------------
+
 
 def knn(table, instance, k, numerical_columns, nominal_columns=[]):
     """Returns the k closest distance values and corresponding table
-    instances forming the nearest neighbors of the given instance. 
+    instances forming the nearest neighbors of the given instance.
 
     Args:
         table: The data table whose instances form the nearest neighbors.
@@ -630,14 +614,14 @@ def knn(table, instance, k, numerical_columns, nominal_columns=[]):
     Returns: A dictionary with k key-value pairs, where the keys are
         the distances and the values are the corresponding rows.
 
-    Notes: 
-        The numerical and nominal columns must be disjoint. 
+    Notes:
+        The numerical and nominal columns must be disjoint.
         The numerical and nominal columns must be valid for the table.
         The resulting score is a combined distance without the final
         square root applied.
 
     """
-    
+
     dic = {}
     for row in table:
         dist = 0
@@ -653,7 +637,6 @@ def knn(table, instance, k, numerical_columns, nominal_columns=[]):
             dic[dist] = [row]
     sorted_dic = sorted(dic.items())[:k]
     return dict(sorted_dic)
-
 
 
 def majority_vote(instances, scores, labeled_column):
@@ -684,7 +667,6 @@ def majority_vote(instances, scores, labeled_column):
         if count[x] == max_count:
             final.append(list[x])
     return final
-
 
 
 def weighted_vote(instances, scores, labeled_column):

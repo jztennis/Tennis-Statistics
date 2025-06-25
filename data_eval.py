@@ -1,26 +1,26 @@
-"""Machine learning algorithm evaluation functions. 
+"""Machine learning algorithm evaluation functions.
 
-NAME: <your name here>
+NAME: Jared Zaugg
 DATE: Fall 2023
 CLASS: CPSC 322
 
 """
 
-from data_table import *
-from data_util import *
-from data_learn import *
+from data_table import DataTable
+from data_util import distinct_values
+from data_learn import tdidt_predict, tdidt_F, resolve_attribute_values, resolve_leaf_nodes, AttributeNode, tdidt, naive_bayes, knn
 from random import randint
 
 
-
-#----------------------------------------------------------------------
+# ----------------------------------------------------------------------
 # HW-8
-#----------------------------------------------------------------------
+# ----------------------------------------------------------------------
 
-def bootstrap(table): 
+
+def bootstrap(table):
     """Creates a training and testing set using the bootstrap method.
 
-    Args: 
+    Args:
         table: The table to create the train and test sets from.
 
     Returns: The pair (training_set, testing_set)
@@ -32,7 +32,7 @@ def bootstrap(table):
     test = DataTable(table.columns())
     listnums = []
     for i in range(n):
-        num = randint(0, n-1)
+        num = randint(0, n - 1)
         train.append(table[num].values())
         if num not in listnums:
             listnums.append(num)
@@ -42,7 +42,6 @@ def bootstrap(table):
     return train, test
 
 
-
 def stratified_holdout(table, label_col, test_set_size):
     """Partitions the table into a training and test set using the holdout
     method such that the test set has a similar distribution as the
@@ -50,7 +49,7 @@ def stratified_holdout(table, label_col, test_set_size):
 
     Args:
         table: The table to partition.
-        label_col: The column with the class labels. 
+        label_col: The column with the class labels.
         test_set_size: The number of rows to include in the test set.
 
     Returns: The pair (training_set, test_set)
@@ -84,7 +83,6 @@ def stratified_holdout(table, label_col, test_set_size):
             else:
                 train.append(row.values())
     return train, test
-    
 
 
 def tdidt_eval_with_tree(dt_root, test, label_col, columns):
@@ -108,8 +106,8 @@ def tdidt_eval_with_tree(dt_root, test, label_col, columns):
 
     labels = distinct_values(test, label_col)
     conf_matrix = DataTable(["actual"] + labels)
-    for l in labels:
-        row = [l]
+    for label in labels:
+        row = [label]
         for _ in labels:
             row.append(0)
         conf_matrix.append(row)
@@ -120,18 +118,17 @@ def tdidt_eval_with_tree(dt_root, test, label_col, columns):
 
                 pred = tdidt_predict(dt_root, row_test)
 
-                if pred != None:
+                if pred is None:
                     for row in conf_matrix:
                         if row["actual"] == label:
                             row[pred[0]] += 1
-                            
+
     return conf_matrix
 
 
-
 def random_forest(table, remainder, F, M, N, label_col, columns):
-    """Returns a random forest build from the given table. 
-    
+    """Returns a random forest build from the given table.
+
     Args:
         table: The original table for cleaning up the decision tree.
         remainder: The table to use to build the random forest.
@@ -152,7 +149,7 @@ def random_forest(table, remainder, F, M, N, label_col, columns):
     temp = 0
     while temp < N:
         tree = tdidt_F(table, label_col, F, columns)
-        if type(tree) == AttributeNode:
+        if type(tree) is AttributeNode:
             tree = resolve_attribute_values(tree, table)
         tree = resolve_leaf_nodes(tree)
         train, test = bootstrap(remainder)
@@ -192,22 +189,21 @@ def random_forest(table, remainder, F, M, N, label_col, columns):
     return final
 
 
-
 def random_forest_eval(table, train, test, F, M, N, label_col, columns):
     """Builds a random forest and evaluate's it given a training and
     testing set.
 
-    Args: 
+    Args:
         table: The initial table.
         train: The training set from the initial table.
         test: The testing set from the initial table.
         F: Number of features (columns) to select.
         M: Number of trees to include in random forest.
         N: Number of trees to initially generate.
-        label_col: The column with class labels. 
+        label_col: The column with class labels.
         columns: The categorical columns to use for classification.
 
-    Returns: A confusion matrix containing the results. 
+    Returns: A confusion matrix containing the results.
 
     Notes: Assumes weighted voting (based on each tree's accuracy) is
         used to select predicted label for each test row.
@@ -216,40 +212,37 @@ def random_forest_eval(table, train, test, F, M, N, label_col, columns):
 
     labels = distinct_values(train, label_col)
     conf_matrix = DataTable(["actual"] + labels)
-    for l in labels:
-        row = [l]
+    for label in labels:
+        row = [label]
         for _ in labels:
             row.append(0)
         conf_matrix.append(row)
 
     forest = random_forest(table, train, F, M, N, label_col, columns)
-    # ea. pair = (tree, accuracy)
-    # for label in labels:
+
     for row_test in test:
-            label_weight = {}
-            for tree in forest:
-                pred = tdidt_predict(tree[0], row_test)
+        label_weight = {}
+        for tree in forest:
+            pred = tdidt_predict(tree[0], row_test)
 
-                if pred not in list(label_weight.keys()) and pred != None:
-                    label_weight[pred[0]] = pred[1]
-                else:
-                    if pred != None:
-                        label_weight[pred[0]] += pred[1]
-            if pred != None:
-                for key, val in list(label_weight.items()):
-                    if val == max(list(label_weight.values())):
-                        final_pred = key
-                for row in conf_matrix:
-                    if row["actual"] == row_test[label_col]:
-                        row[final_pred] += 1
+            if pred not in list(label_weight.keys()) and pred is None:
+                label_weight[pred[0]] = pred[1]
+            else:
+                if pred is None:
+                    label_weight[pred[0]] += pred[1]
+        if pred is None:
+            for key, val in list(label_weight.items()):
+                if val == max(list(label_weight.values())):
+                    final_pred = key
+            for row in conf_matrix:
+                if row["actual"] == row_test[label_col]:
+                    row[final_pred] += 1
     return conf_matrix
-        
 
 
-#----------------------------------------------------------------------
+# ----------------------------------------------------------------------
 # HW-7
-#----------------------------------------------------------------------
-
+# ----------------------------------------------------------------------
 
 
 def tdidt_eval(train, test, label_col, columns):
@@ -273,28 +266,28 @@ def tdidt_eval(train, test, label_col, columns):
 
     labels = distinct_values(train, label_col)
     conf_matrix = DataTable(["actual"] + labels)
-    for l in labels:
-        row = [l]
+    for label in labels:
+        row = [label]
         for _ in labels:
             row.append(0)
         conf_matrix.append(row)
-        
+
     tree = tdidt(train, label_col, columns)
-    if type(tree) == AttributeNode:
+    if type(tree) is AttributeNode:
         tree = resolve_attribute_values(tree, train)
     tree = resolve_leaf_nodes(tree)
-                
+
     for label in labels:
         for row_test in test:
             if row_test[label_col] == label:
 
                 pred = tdidt_predict(tree, row_test)
 
-                if pred != None:
+                if pred is None:
                     for row in conf_matrix:
                         if row["actual"] == label:
                             row[pred[0]] += 1
-                            
+
     return conf_matrix
 
 
@@ -306,8 +299,8 @@ def tdidt_stratified(table, k_folds, label_col, columns):
     Args:
         table: The data table.
         k_folds: The number of stratified folds to use.
-        label_col: The column with labels to predict. 
-        columns: The categorical columns for tdidt. 
+        label_col: The column with labels to predict.
+        columns: The categorical columns for tdidt.
 
     Notes: Each fold created is used as the test set whose results are
         added to a combined confusion matrix from evaluating each
@@ -318,28 +311,28 @@ def tdidt_stratified(table, k_folds, label_col, columns):
     tablelist = stratify(table, label_col, k_folds)
     labels = distinct_values(table, label_col)
     conf_matrix = DataTable(["actual"] + labels)
-    for l in labels:
-        row = [l]
+    for label in labels:
+        row = [label]
         for _ in labels:
             row.append(0)
         conf_matrix.append(row)
-        
+
     for x in range(len(tablelist)):
-        list1 = tablelist[:x] + tablelist[x+1:]
+        list1 = tablelist[:x] + tablelist[x + 1:]
         train = union_all(list1)
 
         tree = tdidt(train, label_col, columns)
-        if type(tree) == AttributeNode:
+        if type(tree) is AttributeNode:
             tree = resolve_attribute_values(tree, train)
         tree = resolve_leaf_nodes(tree)
-                
-        if tablelist[x] != None:
+
+        if tablelist[x] is None:
             for row_test in tablelist[x]:
                 # if row_test[label_col] == label:
 
                 pred = tdidt_predict(tree, row_test)
 
-                if pred != None:
+                if pred is None:
                     for row in conf_matrix:
                         if row["actual"] == row_test[label_col]:
                             row[pred[0]] += 1
@@ -347,9 +340,10 @@ def tdidt_stratified(table, k_folds, label_col, columns):
     return conf_matrix
 
 
-#----------------------------------------------------------------------
+# ----------------------------------------------------------------------
 # HW-6
-#----------------------------------------------------------------------
+# ----------------------------------------------------------------------
+
 
 def stratify(table, label_column, k):
     """Returns a list of k stratified folds as data tables from the given
@@ -357,15 +351,15 @@ def stratify(table, label_column, k):
 
     Args:
         table: The data table to partition.
-        label_column: The column to use for the label. 
-        k: The number of folds to return. 
+        label_column: The column to use for the label.
+        k: The number of folds to return.
 
     Note: Does not randomly select instances for the folds, and
         instead produces folds in order of the instances given in the
         table.
 
     """
-    
+
     list = []
     list1 = []
     count = []
@@ -396,13 +390,12 @@ def stratify(table, label_column, k):
     return list
 
 
-
 def union_all(tables):
     """Returns a table containing all instances in the given list of data
     tables.
 
     Args:
-        tables: A list of data tables. 
+        tables: A list of data tables.
 
     Notes: Returns a new data table that contains all the instances of
        the first table in tables, followed by all the instances in the
@@ -418,14 +411,12 @@ def union_all(tables):
         for table in tables:
             if table.columns() != table1.columns():
                 raise ValueError('Mismatched Columns')
-    
+
     newtable = DataTable(tables[0].columns())
     for table in tables:
         for row in table:
             newtable.append(row.values())
     return newtable
-
-
 
 
 def naive_bayes_eval(train, test, label_col, continuous_cols, categorical_cols=[]):
@@ -447,7 +438,7 @@ def naive_bayes_eval(train, test, label_col, continuous_cols, categorical_cols=[
         instance, the first such label is selected.
 
     """
-    
+
     labels = []
     for row in train:
         if row[label_col] not in labels:
@@ -457,20 +448,18 @@ def naive_bayes_eval(train, test, label_col, continuous_cols, categorical_cols=[
 
     for label in labels:
         row = [label]
-        for l in labels:
+        for _ in labels:
             row.append(0)
         for row_test in test:
             if row_test[label_col] == label:
                 lab, lab_prob = naive_bayes(train, row_test, label_col, continuous_cols, categorical_cols)
 
-                for x in range(len(labels)-1):
-                    if lab[0] == labels[x+1]:
+                for x in range(len(labels) - 1):
+                    if lab[0] == labels[x + 1]:
                         row[x] += 1
         conf_matrix.append(row)
 
-
     return conf_matrix
-
 
 
 def naive_bayes_stratified(table, k_folds, label_col, cont_cols, cat_cols=[]):
@@ -480,29 +469,29 @@ def naive_bayes_stratified(table, k_folds, label_col, cont_cols, cat_cols=[]):
     Args:
         table: The data table.
         k_folds: The number of stratified folds to use.
-        label_col: The column with labels to predict. 
-        cont_cols: The continuous columns for naive bayes. 
-        cat_cols: The categorical columns for naive bayes. 
+        label_col: The column with labels to predict.
+        cont_cols: The continuous columns for naive bayes.
+        cat_cols: The categorical columns for naive bayes.
 
     Notes: Each fold created is used as the test set whose results are
         added to a combined confusion matrix from evaluating each
         fold.
 
     """
-    
+
     tablelist = stratify(table, label_col, k_folds)
     labels = distinct_values(table, label_col)
     conf_matrix = DataTable(["actual"] + labels)
-    for l in labels:
-        row = [l]
+    for label in labels:
+        row = [label]
         for _ in labels:
             row.append(0)
         conf_matrix.append(row)
 
     for x in range(len(tablelist)):
-        list1 = tablelist[:x] + tablelist[x+1:]
+        list1 = tablelist[:x] + tablelist[x + 1:]
         train = union_all(list1)
-                
+
         for label in labels:
             for row_test in tablelist[x]:
                 if row_test[label_col] == label:
@@ -522,7 +511,7 @@ def knn_stratified(table, k_folds, label_col, vote_fun, k, num_cols, nom_cols=[]
     Args:
         table: The data table.
         k_folds: The number of stratified folds to use.
-        label_col: The column with labels to predict. 
+        label_col: The column with labels to predict.
         vote_fun: The voting function to use with knn.
         num_cols: The numeric columns for knn.
         nom_cols: The nominal columns for knn.
@@ -532,20 +521,20 @@ def knn_stratified(table, k_folds, label_col, vote_fun, k, num_cols, nom_cols=[]
         fold.
 
     """
-    
+
     tablelist = stratify(table, label_col, k_folds)
     labels = distinct_values(table, label_col)
     conf_matrix = DataTable(["actual"] + labels)
-    for l in labels:
-        row = [l]
+    for label in labels:
+        row = [label]
         for _ in labels:
             row.append(0)
         conf_matrix.append(row)
 
     for x in range(len(tablelist)):
-        list1 = tablelist[:x] + tablelist[x+1:]
+        list1 = tablelist[:x] + tablelist[x + 1:]
         train = union_all(list1)
-                
+
         for label in labels:
             for row_test in tablelist[x]:
                 if row_test[label_col] == label:
@@ -567,12 +556,13 @@ def knn_stratified(table, k_folds, label_col, vote_fun, k, num_cols, nom_cols=[]
     return conf_matrix
 
 
-#----------------------------------------------------------------------
+# ----------------------------------------------------------------------
 # HW-5
-#----------------------------------------------------------------------
+# ----------------------------------------------------------------------
+
 
 def holdout(table, test_set_size):
-    """Partitions the table into a training and test set using the holdout method. 
+    """Partitions the table into a training and test set using the holdout method.
 
     Args:
         table: The table to partition.
@@ -588,7 +578,7 @@ def holdout(table, test_set_size):
     count = 0
     rowlist = []
     while count < total:
-        x = randint(0, total-1)
+        x = randint(0, total - 1)
         if x not in rowlist:
             count += 1
             rowlist.append(x)
@@ -601,20 +591,18 @@ def holdout(table, test_set_size):
         else:
             test.append(table[i].values())
     return train, test
-    
-
 
 
 def knn_eval(train, test, vote_fun, k, label_col, numeric_cols, nominal_cols=[]):
     """Returns a confusion matrix resulting from running knn over the
-    given test set. 
+    given test set.
 
     Args:
         train: The training set.
         test: The test set.
         vote_fun: The function to use for selecting labels.
         k: The k nearest neighbors for knn.
-        label_col: The column to use for predictions. 
+        label_col: The column to use for predictions.
         numeric_cols: The columns compared using Euclidean distance.
         nominal_cols: The nominal columns for knn (match or no match).
 
@@ -631,12 +619,12 @@ def knn_eval(train, test, vote_fun, k, label_col, numeric_cols, nominal_cols=[])
     for row in train:
         if row[label_col] not in labels:
             labels.append(row[label_col])
-    labels = sorted(labels) 
+    labels = sorted(labels)
     conf_matrix = DataTable(["actual"] + labels)
 
     for actual_label in labels:
-        row = [actual_label] 
-        for l in labels:
+        row = [actual_label]
+        for _ in labels:
             row.append(0)
 
         for row_test in test:
@@ -651,18 +639,17 @@ def knn_eval(train, test, vote_fun, k, label_col, numeric_cols, nominal_cols=[])
                         keys.append(key)
 
                 predicted_label = vote_fun(values, keys, label_col)
-            
+
                 row[predicted_label[0]] += 1
-                    
+
         conf_matrix.append(row)
 
     return conf_matrix
 
 
-
 def accuracy(confusion_matrix, label):
     """Returns the accuracy for the given label from the confusion matrix.
-    
+
     Args:
         confusion_matrix: The confusion matrix.
         label: The class label to measure the accuracy of.
@@ -684,9 +671,11 @@ def accuracy(confusion_matrix, label):
                 else:
                     list += row[x]
                     total += row[x]
-    acc = list / total
+    try:
+        acc = list / total
+    except:
+        acc = -1
     return acc
-
 
 
 def precision(confusion_matrix, label):
@@ -704,12 +693,14 @@ def precision(confusion_matrix, label):
         if row['actual'] == label:
             val = row[label]
         list += row[label]
-    prec = val / list
+    try:
+        prec = val / list
+    except:
+        prec = -1
     return prec
 
 
-
-def recall(confusion_matrix, label): 
+def recall(confusion_matrix, label):
     """Returns the recall for the given label from the confusion matrix.
 
     Args:
@@ -725,5 +716,8 @@ def recall(confusion_matrix, label):
             for x in confusion_matrix.columns():
                 if x != 'actual':
                     list += row[x]
-    rcl = val / list
+    try:
+        rcl = val / list
+    except:
+        rcl = -1
     return rcl

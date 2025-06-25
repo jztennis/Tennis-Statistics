@@ -14,8 +14,7 @@ module, which can be done via the conda command:
 
 from __future__ import annotations
 from dataclasses import dataclass
-from graphviz import Digraph
-
+# from graphviz import Digraph
 
 
 @dataclass
@@ -30,26 +29,24 @@ class LeafNode:
         return (self.count / self.total) * 100
 
 
-    
 @dataclass
 class AttributeNode:
     """Represents an attribute node of a decision tree."""
     name: str
-    values: dict[str, AttributeNode | [LeafNode]]
+    values: dict[str, AttributeNode | [LeafNode]]  # type: ignore
 
 
-    
 def draw_tree(root, fname, display=False, att_clr='white',
               val_clr='white', leaf_clr='white'):
-    """Draws a decision tree using graphviz. 
+    """Draws a decision tree using graphviz.
 
     Args:
         root: The root AttributeNode of a decision tree to draw.
-        fname: The filename to save the graphviz and pdf file. 
-        display: If true, displays the resulting PDF file. 
+        fname: The filename to save the graphviz and pdf file.
+        display: If true, displays the resulting PDF file.
         att_clr: The color name of attribute nodes (default is no color).
-        val_clr: The color name of value nodes (default is no color). 
-        leaf_clr: The color name of leaf nodes (default is no color). 
+        val_clr: The color name of value nodes (default is no color).
+        leaf_clr: The color name of leaf nodes (default is no color
 
     Notes: The given filename creates two files in the current
         directory. One with the Graphviz dot commands and the other a
@@ -60,7 +57,7 @@ def draw_tree(root, fname, display=False, att_clr='white',
     # helper function to draw the nodes and edges
     def draw(dot, dt_root):
         dt_root_id = str(id(dt_root))
-        if type(dt_root) == AttributeNode:
+        if type(dt_root) is AttributeNode:
             dot.node(dt_root_id, f'Attribute: {dt_root.name}', shape='rectangle',
                      style='filled', fillcolor=att_clr)
             for val in dt_root.values:
@@ -69,7 +66,7 @@ def draw_tree(root, fname, display=False, att_clr='white',
                          style='filled', fillcolor=val_clr)
                 dot.edge(dt_root_id, val_id)
                 subtree_root = dt_root.values[val]
-                if type(subtree_root) == AttributeNode: 
+                if type(subtree_root) is AttributeNode:
                     child_id = str(id(subtree_root))
                     dot.edge(val_id, child_id)
                     draw(dot, subtree_root)
@@ -78,22 +75,21 @@ def draw_tree(root, fname, display=False, att_clr='white',
                         child_id = str(id(leaf))
                         dot.edge(val_id, child_id)
                         draw(dot, leaf)
-        elif type(dt_root) == LeafNode:
+        elif type(dt_root) is LeafNode:
             p = round(dt_root.percent(), 2)
-            stats = f'{dt_root.label} ({dt_root.count}, {dt_root.total}, {p}%)' 
+            stats = f'{dt_root.label} ({dt_root.count}, {dt_root.total}, {p}%)'
             dot.node(dt_root_id, stats, shape='oval',
                      style='filled', fillcolor=leaf_clr)
 
     # create the graph
     dot = Digraph()
-    dot.graph_attr['rankdir'] = 'TB'    
-    if not root: 
+    dot.graph_attr['rankdir'] = 'TB'
+    if not root:
         raise ValueError('expecting attribute node')
-    if type(root) == list:
-        for leaf in root: 
+    if type(root) is list:
+        for leaf in root:
             draw(dot, leaf)
-    else: 
+    else:
         draw(dot, root)
     dot.render(fname, view=display)
     return dot
-
