@@ -7,11 +7,17 @@ A modular, from-scratch machine learning toolkit for classification, clustering,
 ## 📦 Project Structure
 
 ├── data_table.py # Core table abstraction (DataTable, DataRow) with CSV support
+
 ├── data_util.py # Utility functions: normalization, discretize, mean, variance, etc.
+
 ├── data_learn.py # Machine learning algorithms (Naive Bayes, k-NN, Gaussian Density, K-Means, etc)
+
 ├── data_eval.py # Evaluation functions and helpers: tdidt, random forest eval, stratify, union all, etc.
+
 ├── decision_tree.py # Trees: LeadfNode, AttributeNode, draw_tree.
+
 ├── match_scores_stats_2017_setup_csv.csv # data
+
 ├── README.md # This file
 
 ---
