@@ -53,7 +53,7 @@ from data_table import DataTable
 from data_learn import naive_bayes
 
 # Load tennis dataset
-table = DataTable(["Outlook", "Temperature", "Humidity", "Wind", "PlayTennis"])
+table = DataTable(["p1_aces", "p1_double_faults", ...])
 table.load("tennis.csv")
 
 # New instance to classify
