@@ -74,3 +74,4 @@ label, prob = naive_bayes(
 )
 
 print(f"Prediction: {label} with probability {prob:.2f}")
+```
